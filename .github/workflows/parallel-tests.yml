@@ -1,0 +1,132 @@
+name: Parallel Unity Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  movement-tests:
+    name: Movement Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          testMode: playmode
+          testCategory: Movement
+          customParameters: -testCategory Movement
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: movement-test-results
+          path: artifacts/
+
+  attack-tests:
+    name: Attack Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          testMode: playmode
+          testCategory: Attack
+          customParameters: -testCategory Attack
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: attack-test-results
+          path: artifacts/
+
+  enemy-tests:
+    name: Enemy Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          testMode: playmode
+          testCategory: Enemy
+          customParameters: -testCategory Enemy
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: enemy-test-results
+          path: artifacts/
+
+  life-tests:
+    name: Life Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          testMode: playmode
+          testCategory: Life
+          customParameters: -testCategory Life
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: life-test-results
+          path: artifacts/
+
+  item-tests:
+    name: Item Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          testMode: playmode
+          testCategory: Item
+          customParameters: -testCategory Item
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: item-test-results
+          path: artifacts/
+
+  ui-tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          testMode: playmode
+          testCategory: UI
+          customParameters: -testCategory UI
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ui-test-results
+          path: artifacts/
+
+  results:
+    name: Test Results Summary
+    needs: [movement-tests, attack-tests, enemy-tests, life-tests, item-tests, ui-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+      - name: Report Results
+        run: |
+          echo "## Test Summary"
+          echo ""
+          echo "- ✅ Movement Tests: ${{ needs.movement-tests.result }}"
+          echo "- ✅ Attack Tests: ${{ needs.attack-tests.result }}"
+          echo "- ✅ Enemy Tests: ${{ needs.enemy-tests.result }}"
+          echo "- ✅ Life Tests: ${{ needs.life-tests.result }}"
+          echo "- ✅ Item Tests: ${{ needs.item-tests.result }}"
+          echo "- ✅ UI Tests: ${{ needs.ui-tests.result }}"
+      - name: Fail if any tests failed
+        if: |
+          needs.movement-tests.result == 'failure' ||
+          needs.attack-tests.result == 'failure' ||
+          needs.enemy-tests.result == 'failure' ||
+          needs.life-tests.result == 'failure' ||
+          needs.item-tests.result == 'failure' ||
+          needs.ui-tests.result == 'failure'
+        run: exit 1
